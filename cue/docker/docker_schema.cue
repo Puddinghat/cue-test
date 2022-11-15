@@ -1,27 +1,27 @@
 package docker
 
 import (
-    "github.com/Puddinghat/cuetest/cue/base"
+    "github.com/Puddinghat/cuetest/cue/terraform"
 )
 
-#DockerContainerNetwork: {
+#ContainerNetwork: {
 	name: string
 	aliases?: [string, ...]
 	ipv4_address?: string
 }
 
-#DockerMounts: {
+#Mounts: {
     source: string
     read_only: bool | *false
 }
 
-#DockerPorts: {
+#Ports: {
     required: number
     external: number | *required
     protocol: "tcp" | "udp" | *"tcp"
 }
 
-#DockerUpload: {
+#Upload: {
     {content?: string} | {content_base64?: string} | {source?: string}
     file: string
     content?: string
@@ -31,18 +31,18 @@ import (
     source_hash?: string
 }
 
-#DockerContainer: {
-	base.#TerraformResource
+#Container: {
+	terraform.#Resource
 	in: {
 		name:     string
 		image:    string
 		id:       name
         hostname?: string
 		resource: "docker_container"
-		networks?: [...#DockerContainerNetwork]
-        mounts?: [...#DockerMounts]
-        ports?: [...#DockerPorts]
-        upload?: [...#DockerUpload]
+		networks?: [...#ContainerNetwork]
+        mounts?: [...#Mounts]
+        ports?: [...#Ports]
+        upload?: [...#Upload]
 	}
 
 	_ref: {
@@ -70,8 +70,8 @@ import (
     }
 }
 
-#DockerNetwork: {
-	base.#TerraformResource
+#Network: {
+	terraform.#Resource
 	in: {
 		name:     string
 		id:       name
@@ -89,8 +89,8 @@ import (
 	}
 }
 
-#DockerVolume: {
-	base.#TerraformResource
+#Volume: {
+	terraform.#Resource
 	in: {
 		name:     string
 		id:       name
