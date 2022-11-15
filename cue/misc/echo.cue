@@ -1,7 +1,12 @@
 package misc
 
+import (
+    "github.com/Puddinghat/cuetest/cue/base"
+	"github.com/Puddinghat/cuetest/cue/docker"
+)
+
 #Echotest: {
-	#Compound
+	base.#Compound
 
 	input="in": {
 		name:         string
@@ -10,7 +15,7 @@ package misc
 	}
 
 	_deps: {
-		container: #DockerContainer & {
+		container: docker.#DockerContainer & {
 			in: {
 				name:  input.name
 				image: "ealen/echo-server"
@@ -28,7 +33,7 @@ package misc
 }
 
 #EchoNetwork: {
-	#Compound
+	base.#Compound
 
 	input="in": {
 		name:         string
@@ -42,7 +47,7 @@ package misc
 				network_name: input.network_name
 			}
 		}
-		echoNetwork: #DockerNetwork & {
+		echoNetwork: docker.#DockerNetwork & {
 			in: {
 				name: input.network_name
 			}

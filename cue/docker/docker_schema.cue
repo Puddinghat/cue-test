@@ -1,7 +1,7 @@
 package docker
 
 import (
-    "github.com/Puddinghat/cue-test/base"
+    "github.com/Puddinghat/cuetest/cue/base"
 )
 
 #DockerContainerNetwork: {
@@ -32,7 +32,7 @@ import (
 }
 
 #DockerContainer: {
-	#TerraformResource
+	base.#TerraformResource
 	in: {
 		name:     string
 		image:    string
@@ -71,7 +71,7 @@ import (
 }
 
 #DockerNetwork: {
-	#TerraformResource
+	base.#TerraformResource
 	in: {
 		name:     string
 		id:       name
@@ -90,7 +90,7 @@ import (
 }
 
 #DockerVolume: {
-	#TerraformResource
+	base.#TerraformResource
 	in: {
 		name:     string
 		id:       name

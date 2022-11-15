@@ -1,1 +1,1 @@
-module: "github.com/Puddinghat/cue-test"
+module: "github.com/Puddinghat/cuetest"
