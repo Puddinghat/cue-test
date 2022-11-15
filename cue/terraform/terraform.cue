@@ -1,10 +1,10 @@
-package base
+package terraform
 
 #TFDefinition: {
 	depends_on?: [...string]
 }
 
-#TerraformResource: {
+#Resource: {
 	input="in": {
 		tf:       #TFDefinition
 		resource: string
@@ -24,7 +24,7 @@ package base
 	}
 }
 
-#TerraformData: {
+#Data: {
 	input="in": {
 		tf:   #TFDefinition
 		data: string
@@ -43,7 +43,7 @@ package base
 	}
 }
 
-#TerraformProvider: {
+#Provider: {
 	input="in": {
 		name:    string
 		source:  string
@@ -65,7 +65,7 @@ package base
 	}
 }
 
-#TerraformOutput: {
+#Output: {
 	input="terraform": {
 		_resources: {...}
 	}
