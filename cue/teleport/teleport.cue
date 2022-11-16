@@ -13,7 +13,7 @@ import (
 		network: string
 	}
 	dep="_deps": {
-		container: docker.#DockerContainer & {
+		container: docker.#Container & {
 			in: {
 				name:  "teleport_" + (input.name)
 				image: "public.ecr.aws/gravitational/teleport:" + (input.version)
@@ -27,7 +27,7 @@ import (
 		}
 	}
 
-    _ref: {
-        container: dep._ref
+    ref: {
+        container: dep.container.ref
     }
 }

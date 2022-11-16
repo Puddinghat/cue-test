@@ -45,11 +45,11 @@ import (
         upload?: [...#Upload]
 	}
 
-	_ref: {
+	ref: {
 		name: "${docker_container.\(in.name).name}"
 	}
 
-    _res: {
+    res: {
         name:              in.name
         image:             in.image
         if in.networks != _|_ {
@@ -79,12 +79,12 @@ import (
 		driver:   "bridge" | "host" | "overlay" | "macvlan" | *"bridge"
 	}
 
-    _res: {
+    res: {
         name:   in.name
         driver: in.driver
     }
 
-	_ref: {
+	ref: {
 		name: "${docker_network.\(in.name).name}"
 	}
 }
@@ -97,11 +97,11 @@ import (
 		resource: "docker_volume"
 	}
 
-    _res: {
+    res: {
         name:   in.name
     }
 
-	_ref: {
+	ref: {
 		id: "${docker_volume.\(in.name).id}"
         name: "${docker_volume.\(in.name).name}"
 	}

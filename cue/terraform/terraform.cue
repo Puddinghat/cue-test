@@ -11,14 +11,14 @@ package terraform
 		id:       string
 	}
 
-	_ref: {...}
-    _res: {...}
+	ref: {...}
+    res: {...}
+	inst: "\(input.resource).\(input.id)"
 
 	out: {
 		tf: resource: (input.resource): (input.id): {
 			input.tf
-			_inst: "\(input.resource).\(input.id)"
-            _res
+            res
 			...
 		}
 	}
@@ -31,13 +31,13 @@ package terraform
 		id:   string
 	}
 
-    _res: {...}
+    res: {...}
+	inst: "data.\(input.data).\(input.id)"
 
 	out: {
 		tf: data: (input.data): (input.id): {
-            _res
+            res
 			input.tf
-			_inst: "data.\(input.data).\(input.id)"
 			...
 		}
 	}
@@ -66,11 +66,11 @@ package terraform
 }
 
 #Output: {
-	input="terraform": {
-		_resources: {...}
+	#resources: {
+		...
 	}
 
-	for _, res in input._resources {
+	for _, res in #resources {
 		res.out.tf
 	}
 }

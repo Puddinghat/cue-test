@@ -1,25 +1,15 @@
 package cuetest
 
 import (
-    "github.com/Puddinghat/cuetest/cue/docker"
-	tfcue "github.com/Puddinghat/cuetest/cue/terraform"
+	"github.com/Puddinghat/cuetest/cue/docker"
+	"github.com/Puddinghat/cuetest/cue/terraform"
+	"github.com/Puddinghat/cuetest/cue/misc"
 )
 
-// some kind of bug? This evaluates like this normally, but not when it is in the base package
-#TerraformOutput: {
-	input="terraform": {
-		_resources: {...}
-	}
-
-	for _, res in input._resources {
-		res.out.tf
-	}
-}
-
 init: {
-	tf: #TerraformOutput & {
-		terraform: _resources: {
-			dockerProvider: tfcue.#Provider & {
+	tf: terraform.#Output & {
+		res=#resources: {
+			dockerProvider: terraform.#Provider & {
 				in: {
 					name:    "docker"
 					source:  "kreuzwerker/docker"
@@ -28,9 +18,15 @@ init: {
 			}
 			echo: docker.#Network & {
 				in: {
-					name:         "foo1"
+					name: "foo1"
 				}
 			}
-		}
+
+			test: misc.#Echotest & {
+				in: {
+					name:         "echo"
+					network_name: res.echo.ref.name
+				}
+			}}
 	}
 }

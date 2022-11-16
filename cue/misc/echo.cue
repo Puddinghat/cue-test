@@ -1,8 +1,8 @@
 package misc
 
 import (
-    "github.com/Puddinghat/cuetest/cue/base"
 	"github.com/Puddinghat/cuetest/cue/docker"
+	"github.com/Puddinghat/cuetest/cue/base"
 )
 
 #Echotest: {
@@ -14,8 +14,17 @@ import (
 		ref:          bool | *true
 	}
 
-	_deps: {
-		container: docker.#DockerContainer & {
+	ref: {
+		if input.ref {
+			name: "${docker_network.\(input.network_name).name}"
+		}
+		if !input.ref {
+			name: input.network_name
+		}
+	}
+
+	deps: {
+		container: docker.#Container & {
 			in: {
 				name:  input.name
 				image: "ealen/echo-server"
@@ -40,14 +49,14 @@ import (
 		network_name: string
 	}
 
-	_deps: {
+	deps: {
 		echoContainer: #Echotest & {
 			in: {
 				name:         "echo1_" + (input.name)
 				network_name: input.network_name
 			}
 		}
-		echoNetwork: docker.#DockerNetwork & {
+		echoNetwork: docker.#Network & {
 			in: {
 				name: input.network_name
 			}

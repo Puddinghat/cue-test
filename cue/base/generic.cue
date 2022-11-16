@@ -2,8 +2,8 @@ package base
 
 #Compound: {
 	in: {...}
-	_deps: {...}
-	for _, resources in _deps {
+	deps: {...}
+	for _, resources in deps {
 		out: resources.out
 	}
 }
