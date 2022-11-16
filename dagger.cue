@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"universe.dagger.io/docker"
 	"universe.dagger.io/alpine"
+	"github.com/Puddinghat/cuetest/resources"
 )
 
 dagger.#Plan & {
@@ -19,20 +20,20 @@ dagger.#Plan & {
 		}
 		filesystem: "plan": {
 			write: {
-				path: "build"
-				contents: actions.terraformPlan.plan.export.directories["/build"]
+				path: "build/tf.plan"
+				contents: actions.terraformPlan.plan.export.files["tf.plan"]
 			}
 		}
 		filesystem: "apply": {
 			write: {
-				path: "build"
-				contents: actions.terraformApply.apply.export.directories["/build"]
+				path: "build/terraform.tfstate"
+				contents: actions.terraformApply.apply.export.files["terraform.tfstate"]
 			}
 		}
 		filesystem: "destroy": {
 			write: {
-				path: "build/"
-				contents: actions.terraformDestroy.destroy.export.directories["/build"]
+				path: "build/terraform.tfstate"
+				contents: actions.terraformDestroy.destroy.export.files["terraform.tfstate"]
 			}
 		}
 		network: "unix:///var/run/docker.sock": connect: dagger.#Socket
@@ -42,7 +43,7 @@ dagger.#Plan & {
 			write: core.#WriteFile & {
 				input:    dagger.#Scratch & {}
 				path:     "terraform.tf.json"
-				contents: json.Indent(json.Marshal(init.tf), "", "\t")
+				contents: json.Indent(json.Marshal(resources.init.tf), "", "\t")
 			}
 
 			image: alpine.#Build & {
@@ -90,19 +91,20 @@ dagger.#Plan & {
 
 			plan: docker.#Run & {
 				input: copy.output
+				always: true
 				mounts: docker: {
 					dest:     "/var/run/docker.sock"
 					contents: client.network["unix:///var/run/docker.sock"].connect
 				}
 				workdir: "/build"
 				export: {
-					directories: {
-						"/build": _
+					files: {
+						"tf.plan": _
 					}
 				}
 				command: {
 					name: "terraform"
-					args: ["plan", "-out=/build/tf.plan", "-state=/build/terraform.tfstate"]
+					args: ["plan", "-out=tf.plan", "-state=terraform.tfstate"]
 				}
 			}
 		}
@@ -124,15 +126,16 @@ dagger.#Plan & {
 					dest:     "/var/run/docker.sock"
 					contents: client.network["unix:///var/run/docker.sock"].connect
 				}
+				always: true
 				workdir: "/build"
 				export: {
-					directories: {
-						"/build": _
+					files: {
+						"terraform.tfstate": _
 					}
 				}
 				command: {
 					name: "terraform"
-					args: ["apply","-auto-approve","-state=build/terraform.tfstate","build/tf.plan"]
+					args: ["apply","-auto-approve","-state=terraform.tfstate"]
 				}
 			}
 		}
@@ -156,13 +159,14 @@ dagger.#Plan & {
 				}
 				workdir: "/build"
 				export: {
-					directories: {
-						"/build": _
+					files: {
+						"terraform.tfstate": _
 					}
 				}
+				always: true
 				command: {
 					name: "terraform"
-					args: ["destroy","-auto-approve","-state=build/terraform.tfstate"]
+					args: ["destroy","-auto-approve","-state=terraform.tfstate"]
 				}
 			}
 		}
@@ -170,7 +174,7 @@ dagger.#Plan & {
 			write: core.#WriteFile & {
 				input:    client.filesystem["."].read.contents
 				path:     "build/terraform.tf.json"
-				contents: json.Indent(json.Marshal(init.tf), "", "\t")
+				contents: json.Indent(json.Marshal(resources.init.tf), "", "\t")
 			}
 		}
 	}
