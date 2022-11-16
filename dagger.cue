@@ -118,10 +118,10 @@ dagger.#Plan & {
 				contents: state.output
 				include: ["terraform.tfstate","tf.plan"]
 				source:   "."
-				dest:     "build/"
+				dest:     "."
 			}
 			apply: docker.#Run & {
-				input: copy.output
+				input: terraformPlan.plan.output
 				mounts: docker: {
 					dest:     "/var/run/docker.sock"
 					contents: client.network["unix:///var/run/docker.sock"].connect
@@ -135,7 +135,7 @@ dagger.#Plan & {
 				}
 				command: {
 					name: "terraform"
-					args: ["apply","-auto-approve","-state=terraform.tfstate"]
+					args: ["apply","-auto-approve","-state=terraform.tfstate","tf.plan"]
 				}
 			}
 		}
@@ -149,7 +149,7 @@ dagger.#Plan & {
 				contents: state.output
 				include: ["terraform.tfstate","tf.plan"]
 				source:   "."
-				dest:     "build/"
+				dest:     "."
 			}
 			destroy: docker.#Run & {
 				input: copy.output
