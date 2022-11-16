@@ -4,7 +4,18 @@ package terraform
 	depends_on?: [...string]
 }
 
-#Resource: {
+#Schema: {
+	in: {...}
+	out: {
+		tf: {
+			...
+		}
+	...
+	}
+	...
+}
+
+#Resource: #Schema & {
 	input="in": {
 		tf:       #TFDefinition
 		resource: string
@@ -24,7 +35,7 @@ package terraform
 	}
 }
 
-#Data: {
+#Data: #Schema & {
 	input="in": {
 		tf:   #TFDefinition
 		data: string
@@ -43,7 +54,7 @@ package terraform
 	}
 }
 
-#Provider: {
+#Provider: #Schema & {
 	input="in": {
 		name:    string
 		source:  string
@@ -67,7 +78,7 @@ package terraform
 
 #Output: {
 	#resources: {
-		...
+		[_]: #Schema
 	}
 
 	for _, res in #resources {

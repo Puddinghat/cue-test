@@ -26,7 +26,15 @@ init: {
 				in: {
 					name:         "echo"
 					network_name: res.echo.ref.name
+					ref:          false
 				}
-			}}
+			}
+			echoTest2: misc.#EchoNetwork & {
+				in: {
+					name:         "foo1"
+					network_name: "second_network"
+				}
+			}
+		}
 	}
 }
