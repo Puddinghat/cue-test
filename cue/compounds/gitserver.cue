@@ -19,10 +19,15 @@ import (
         }
 	}
 	dep="deps": {
+        gitImage: docker.#Image & {
+            in: {
+                name: "git-ssh:" + (input.version)
+            }
+        }
 		container: docker.#Container & {
 			in: {
 				name:  "gitserver_" + (input.name)
-				image: "git-ssh:" + (input.version)
+				image: gitImage
 				networks: (input.network): _
                 ports: "22": external: 2222
                 mounts: {

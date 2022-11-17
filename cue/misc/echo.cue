@@ -24,10 +24,15 @@ import (
 	}
 
 	deps: {
+		echoImage: docker.#Image & {
+            in: {
+                name: "ealen/echo-server"
+            }
+        }
 		container: docker.#Container & {
 			in: {
 				name:  input.name
-				image: "ealen/echo-server"
+				image: echoImage
 				networks: {
 					if input.ref {
 						"${docker_network.\(input.network_name).name}": _

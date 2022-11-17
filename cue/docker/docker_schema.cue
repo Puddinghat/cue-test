@@ -2,6 +2,7 @@ package docker
 
 import (
 	"strconv"
+	"strings"
 	
 	"github.com/Puddinghat/cuetest/cue/base"
 	"github.com/Puddinghat/cuetest/cue/terraform"
@@ -72,11 +73,29 @@ import (
 	source_hash?:    string
 }
 
+#Image: {
+	terraform.#Resource
+	input="in": {
+		name: string
+		resource: "docker_image"
+		id: strings.Replace(strings.Replace(strings.Replace(name, "-", "_", -1),":","_",-1),".","_",-1)
+	}
+
+	res: {
+		name: input.name
+		keep_locally: true
+	}
+
+	ref: {
+		imageId: "${docker_image.\(input.id).image_id}"
+	}
+}
+
 #Container: {
 	terraform.#Resource
 	input="in": {
 		name:      string
-		image:     string
+		image:     #Image
 		id:        name
 		hostname?: string
 		resource:  "docker_container"
@@ -93,7 +112,7 @@ import (
 
 	res: {
 		name:              input.name
-		image:             input.image
+		image:             input.image.ref.imageId
 		networks_advanced: (base.#StructToArray & {in: {struct: input.networks}}).out
 		mounts:            (base.#StructToArray & {in: {struct: input.mounts}}).out
 		ports:             (base.#StructToArray & {in: {struct: input.ports}}).out
@@ -148,3 +167,4 @@ import (
 		name: "${docker_volume.\(input.name).name}"
 	}
 }
+
