@@ -36,14 +36,20 @@ dagger.#Plan & {
 				contents: actions.terraformDestroy.destroy.export.files["terraform.tfstate"]
 			}
 		}
+		env: {
+			"PWD": string
+		}
 		network: "unix:///var/run/docker.sock": connect: dagger.#Socket
 	}
 	actions: {
+		let resourceConfig = resources.#Root & {#parameters: {rootdir: client.env["PWD"]}}
+
 		terraformPrepare: {
+
 			write: core.#WriteFile & {
 				input:    dagger.#Scratch & {}
 				path:     "terraform.tf.json"
-				contents: json.Indent(json.Marshal(resources.init.tf), "", "\t")
+				contents: json.Indent(json.Marshal(resourceConfig.providers), "", "\t")
 			}
 
 			image: alpine.#Build & {
@@ -89,8 +95,21 @@ dagger.#Plan & {
 				dest:     "terraform.tfstate"
 			}
 
+			write: core.#WriteFile & {
+				input:    dagger.#Scratch & {}
+				path:     "terraform.tf.json"
+				contents: json.Indent(json.Marshal(resourceConfig.tf), "", "\t")
+			}
+
+			copyJson: docker.#Copy & {
+				input:    copy.output
+				contents: write.output
+				source:   "terraform.tf.json"
+				dest:     "terraform.tf.json"
+			}
+
 			plan: docker.#Run & {
-				input:  copy.output
+				input:  copyJson.output
 				always: true
 				mounts: docker: {
 					dest:     "/var/run/docker.sock"
@@ -174,7 +193,7 @@ dagger.#Plan & {
 			write: core.#WriteFile & {
 				input:    client.filesystem["."].read.contents
 				path:     "build/terraform.tf.json"
-				contents: json.Indent(json.Marshal(resources.init.tf), "", "\t")
+				contents: json.Indent(json.Marshal(resourceConfig.tf), "", "\t")
 			}
 		}
 	}
