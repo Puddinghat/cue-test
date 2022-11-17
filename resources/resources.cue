@@ -5,7 +5,10 @@ import (
 	"github.com/Puddinghat/cuetest/cue/terraform"
 	"github.com/Puddinghat/cuetest/cue/compounds"
 	"github.com/Puddinghat/cuetest/cue/k3d"
+	"github.com/Puddinghat/cuetest/cue/vault"
 )
+
+test: #Root & {#parameters: rootdir: "test"}
 
 #Root: {
 	#parameters: {
@@ -16,6 +19,7 @@ import (
 		#resources: {
 			dockerProvider: docker.#Provider
 			k3dProv: k3d.#Provider
+			vaultProv: vault.#Provider
 		}
 	}
 	tf: terraform.#CueOutput & {
@@ -49,6 +53,17 @@ import (
 			}
 
 			clusterCredentials: cluster.lib.kubeConfig
+			vaultInst: vault.#Instance & {
+				in: {
+					name: "dev-vault"
+					network: echo.ref.name
+				}
+			}
+			vaultProv: vault.#ProviderFromConfig & {
+				in: {
+					config: vaultInst.lib.config
+				}
+			}
 		}
 	}
 }
