@@ -3,12 +3,15 @@ package resources
 import (
 	"github.com/Puddinghat/cuetest/cue/docker"
 	"github.com/Puddinghat/cuetest/cue/terraform"
-	"github.com/Puddinghat/cuetest/cue/misc"
+	"github.com/Puddinghat/cuetest/cue/compounds"
 )
+
+//TODO: this is #pwd/.. or wherever you want to create the gitrepo
+#test: string
 
 init: {
 	tf: terraform.#Output & {
-		res=#resources: {
+		#resources: {
 			dockerProvider: terraform.#Provider & {
 				in: {
 					name:    "docker"
@@ -22,11 +25,15 @@ init: {
 				}
 			}
 
-			test: misc.#Echotest & {
+			gitServer: compounds.#GitServer & {
 				in: {
-					name:         "echo"
-					network_name: res.echo.ref.name
-					ref:          false
+					name:    "cuetest"
+					network: echo.ref.name
+					mounts: {
+						keys: #test + "/cue-test/keys"
+						keysHost: #test + "/cue-test/keys-host"
+						repos: #test
+					}
 				}
 			}
 		}

@@ -1,108 +1,142 @@
 package docker
 
 import (
-    "github.com/Puddinghat/cuetest/cue/terraform"
+	"strconv"
+	
+	"github.com/Puddinghat/cuetest/cue/base"
+	"github.com/Puddinghat/cuetest/cue/terraform"
 )
 
-#ContainerNetwork: {
-	name: string
+#ContainerNetwork: [Name=_]: {
+	name: string | *Name
 	aliases?: [string, ...]
 	ipv4_address?: string
 }
 
-#Mounts: {
-    source: string
-    read_only: bool | *false
+#Mounts: [Target=_]: {
+	source?:   string 
+	target:    string | *Target
+	type:      "bind" | "volume" | "tmpfs"
+	read_only: bool | *false
 }
 
-#Ports: {
-    required: number
-    external: number | *required
-    protocol: "tcp" | "udp" | *"tcp"
+#TmpfsMount: {
+    #Mounts
+	[Target=_]: {
+        target: string | *Target
+		type: "tmpfs"
+        read_only: false
+	}
 }
 
-#Upload: {
-    {content?: string} | {content_base64?: string} | {source?: string}
-    file: string
-    content?: string
-    content_base64?: string
-    source?: string
-    executable: bool | *false
-    source_hash?: string
+#BindMount: {
+    #Mounts
+	[Target=_]:  {
+        target: string | *Target
+		source: string
+		type:   "bind"
+	}
+}
+
+#VolumeMount: {
+    #Mounts
+	[Target=_]: {
+        target: string | *Target
+		source: string
+		type:   "volume"
+	}
+}
+
+#Ports: [Port=_]: {
+	#port:    string | *Port
+	internal: strconv.ParseInt(#port, 10, 16)
+	external: number | *internal
+	protocol: "tcp" | "udp" | *"tcp"
+}
+
+#Upload: [File=_]: {
+	{content?: string} | {content_base64?: string} | {source?: string}
+	file:            string | *File
+	content?:        string
+	content_base64?: string
+	source?:         string
+	executable:      bool | *false
+	source_hash?:    string
 }
 
 #Container: {
 	terraform.#Resource
-	in: {
-		name:     string
-		image:    string
-		id:       name
-        hostname?: string
-		resource: "docker_container"
-		networks?: [...#ContainerNetwork]
-        mounts?: [...#Mounts]
-        ports?: [...#Ports]
-        upload?: [...#Upload]
+	input="in": {
+		name:      string
+		image:     string
+		id:        name
+		hostname?: string
+		resource:  "docker_container"
+		networks:  #ContainerNetwork
+		mounts:    #Mounts
+		ports:     #Ports
+		uploads:   #Upload
+        env: base.#EnvVariables
 	}
 
 	ref: {
-		name: "${docker_container.\(in.name).name}"
+		name: "${docker_container.\(input.name).name}"
 	}
 
-    res: {
-        name:              in.name
-        image:             in.image
-        if in.networks != _|_ {
-            networks_advanced: in.networks
-        }
-        if in.hostname != _|_ {
-            hostname: in.hostname
-        }
-        if in.mounts != _|_ {
-            mounts: in.mounts
-        }
-        if in.ports != _|_ {
-            ports: in.ports
-        }
-        if in.upload != _|_ {
-            upload: in.upload
-        }
-    }
+	res: {
+		name:              input.name
+		image:             input.image
+		networks_advanced: (base.#StructToArray & {in: {struct: input.networks}}).out
+		mounts:            (base.#StructToArray & {in: {struct: input.mounts}}).out
+		ports:             (base.#StructToArray & {in: {struct: input.ports}}).out
+		upload:           (base.#StructToArray & {in: {struct: input.uploads}}).out
+        env: (base.#StructToEnv & {in: input.env}).out
+		if input.hostname != _|_ {
+			hostname: input.hostname
+		}
+	}
 }
 
 #Network: {
 	terraform.#Resource
-	in: {
+	input="in": {
 		name:     string
 		id:       name
 		resource: "docker_network"
 		driver:   "bridge" | "host" | "overlay" | "macvlan" | *"bridge"
 	}
 
-    res: {
-        name:   in.name
-        driver: in.driver
-    }
+	res: {
+		name:   input.name
+		driver: input.driver
+	}
 
 	ref: {
-		name: "${docker_network.\(in.name).name}"
+		name: "${docker_network.\(input.name).name}"
 	}
 }
 
 #Volume: {
 	terraform.#Resource
-	in: {
+	input="in": {
 		name:     string
 		id:       name
 		resource: "docker_volume"
 	}
 
-    res: {
-        name:   in.name
-    }
+	res: {
+		name: input.name
+	}
 
 	ref: {
-		id: "${docker_volume.\(in.name).id}"
-        name: "${docker_volume.\(in.name).name}"
+		#MountTarget: {
+			#target: string
+			(#target): #VolumeMount & {
+				source: "${docker_volume.\(input.name).name}"
+			}
+		}
+
+		id:   "${docker_volume.\(input.name).id}"
+		name: "${docker_volume.\(input.name).name}"
 	}
 }

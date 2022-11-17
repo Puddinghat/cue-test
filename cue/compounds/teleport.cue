@@ -1,4 +1,4 @@
-package teleport
+package compounds
 
 import (
     "github.com/Puddinghat/cuetest/cue/base"
@@ -18,11 +18,7 @@ import (
 				name:  "teleport_" + (input.name)
 				image: "public.ecr.aws/gravitational/teleport:" + (input.version)
                 hostname: "localhost"
-				networks: [
-					{
-						name: input.network
-					},
-				]
+				networks: (input.network): _
 			}
 		}
 	}

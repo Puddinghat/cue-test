@@ -28,14 +28,14 @@ import (
 			in: {
 				name:  input.name
 				image: "ealen/echo-server"
-				networks: [
+				networks: {
 					if input.ref {
-						name: "${docker_network.\(input.network_name).name}"
+						"${docker_network.\(input.network_name).name}": _
 					},
 					if !input.ref {
-						name: input.network_name
+						(input.network_name): _
 					},
-				]
+				}
 			}
 		}
 	}

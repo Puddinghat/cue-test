@@ -20,19 +20,19 @@ dagger.#Plan & {
 		}
 		filesystem: "plan": {
 			write: {
-				path: "build/tf.plan"
+				path:     "build/tf.plan"
 				contents: actions.terraformPlan.plan.export.files["tf.plan"]
 			}
 		}
 		filesystem: "apply": {
 			write: {
-				path: "build/terraform.tfstate"
+				path:     "build/terraform.tfstate"
 				contents: actions.terraformApply.apply.export.files["terraform.tfstate"]
 			}
 		}
 		filesystem: "destroy": {
 			write: {
-				path: "build/terraform.tfstate"
+				path:     "build/terraform.tfstate"
 				contents: actions.terraformDestroy.destroy.export.files["terraform.tfstate"]
 			}
 		}
@@ -90,7 +90,7 @@ dagger.#Plan & {
 			}
 
 			plan: docker.#Run & {
-				input: copy.output
+				input:  copy.output
 				always: true
 				mounts: docker: {
 					dest:     "/var/run/docker.sock"
@@ -111,14 +111,14 @@ dagger.#Plan & {
 		terraformApply: {
 			state: core.#Source & {
 				path: "build"
-				include: ["terraform.tfstate","tf.plan"]
+				include: ["terraform.tfstate", "tf.plan"]
 			}
 			copy: docker.#Copy & {
 				input:    terraformPrepare.tfInit.output
 				contents: state.output
-				include: ["terraform.tfstate","tf.plan"]
-				source:   "."
-				dest:     "."
+				include: ["terraform.tfstate", "tf.plan"]
+				source: "."
+				dest:   "."
 			}
 			apply: docker.#Run & {
 				input: terraformPlan.plan.output
@@ -126,7 +126,7 @@ dagger.#Plan & {
 					dest:     "/var/run/docker.sock"
 					contents: client.network["unix:///var/run/docker.sock"].connect
 				}
-				always: true
+				always:  true
 				workdir: "/build"
 				export: {
 					files: {
@@ -135,21 +135,21 @@ dagger.#Plan & {
 				}
 				command: {
 					name: "terraform"
-					args: ["apply","-auto-approve","-state=terraform.tfstate","tf.plan"]
+					args: ["apply", "-auto-approve", "-state=terraform.tfstate", "tf.plan"]
 				}
 			}
 		}
 		terraformDestroy: {
 			state: core.#Source & {
 				path: "build"
-				include: ["terraform.tfstate","tf.plan"]
+				include: ["terraform.tfstate", "tf.plan"]
 			}
 			copy: docker.#Copy & {
 				input:    terraformPrepare.tfInit.output
 				contents: state.output
-				include: ["terraform.tfstate","tf.plan"]
-				source:   "."
-				dest:     "."
+				include: ["terraform.tfstate", "tf.plan"]
+				source: "."
+				dest:   "."
 			}
 			destroy: docker.#Run & {
 				input: copy.output
@@ -166,7 +166,7 @@ dagger.#Plan & {
 				always: true
 				command: {
 					name: "terraform"
-					args: ["destroy","-auto-approve","-state=terraform.tfstate"]
+					args: ["destroy", "-auto-approve", "-state=terraform.tfstate"]
 				}
 			}
 		}
