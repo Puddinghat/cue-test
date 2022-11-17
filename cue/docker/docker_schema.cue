@@ -7,6 +7,14 @@ import (
 	"github.com/Puddinghat/cuetest/cue/terraform"
 )
 
+#Provider: terraform.#Provider & {
+	in: {
+		name:    "docker"
+		source:  "kreuzwerker/docker"
+		version: "2.23.0"
+	}
+}
+
 #ContainerNetwork: [Name=_]: {
 	name: string | *Name
 	aliases?: [string, ...]
@@ -14,34 +22,34 @@ import (
 }
 
 #Mounts: [Target=_]: {
-	source?:   string 
+	source?:   string
 	target:    string | *Target
 	type:      "bind" | "volume" | "tmpfs"
 	read_only: bool | *false
 }
 
 #TmpfsMount: {
-    #Mounts
+	#Mounts
 	[Target=_]: {
-        target: string | *Target
-		type: "tmpfs"
-        read_only: false
+		target:    string | *Target
+		type:      "tmpfs"
+		read_only: false
 	}
 }
 
 #BindMount: {
-    #Mounts
-	[Target=_]:  {
-        target: string | *Target
+	#Mounts
+	[Target=_]: {
+		target: string | *Target
 		source: string
 		type:   "bind"
 	}
 }
 
 #VolumeMount: {
-    #Mounts
+	#Mounts
 	[Target=_]: {
-        target: string | *Target
+		target: string | *Target
 		source: string
 		type:   "volume"
 	}
@@ -76,7 +84,7 @@ import (
 		mounts:    #Mounts
 		ports:     #Ports
 		uploads:   #Upload
-        env: base.#EnvVariables
+		env:       base.#EnvVariables
 	}
 
 	ref: {
@@ -89,8 +97,8 @@ import (
 		networks_advanced: (base.#StructToArray & {in: {struct: input.networks}}).out
 		mounts:            (base.#StructToArray & {in: {struct: input.mounts}}).out
 		ports:             (base.#StructToArray & {in: {struct: input.ports}}).out
-		upload:           (base.#StructToArray & {in: {struct: input.uploads}}).out
-        env: (base.#StructToEnv & {in: input.env}).out
+		upload:            (base.#StructToArray & {in: {struct: input.uploads}}).out
+		env:               (base.#StructToEnv & {in:            input.env}).out
 		if input.hostname != _|_ {
 			hostname: input.hostname
 		}
@@ -130,7 +138,7 @@ import (
 
 	ref: {
 		#MountTarget: {
-			#target: string
+			#target:   string
 			(#target): #VolumeMount & {
 				source: "${docker_volume.\(input.name).name}"
 			}
