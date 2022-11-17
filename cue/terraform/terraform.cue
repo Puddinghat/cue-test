@@ -77,6 +77,24 @@ package terraform
 }
 
 #Output: {
+	input="in": {
+		tf:   #TFDefinition
+		value: string
+		id:   string
+		sensitive: bool | *false
+	}
+
+	out: {
+		tf: output: (input.id): {
+            value: input.value
+			sensitive: input.sensitive
+			input.tf
+			...
+		}
+	}
+}
+
+#CueOutput: {
 	#resources: {
 		[_]: #Schema
 	}
