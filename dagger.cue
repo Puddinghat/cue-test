@@ -2,6 +2,7 @@ package cuetest
 
 import (
 	"dagger.io/dagger"
+	"path"
 
 	"dagger.io/dagger/core"
 	"encoding/json"
@@ -42,7 +43,7 @@ dagger.#Plan & {
 		network: "unix:///var/run/docker.sock": connect: dagger.#Socket
 	}
 	actions: {
-		let resourceConfig = resources.#Root & {#parameters: {rootdir: client.env["PWD"]}}
+		let resourceConfig = resources.#Root & {#parameters: {rootdir: path.Clean(client.env["PWD"] + "/..", "unix")}}
 
 		terraformPrepare: {
 
