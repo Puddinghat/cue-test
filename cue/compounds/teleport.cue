@@ -13,10 +13,15 @@ import (
 		network: string
 	}
 	dep="_deps": {
+		teleportImage: docker.#Image & {
+            in: {
+                name: "public.ecr.aws/gravitational/teleport:" + (input.version)
+            }
+        }
 		container: docker.#Container & {
 			in: {
 				name:  "teleport_" + (input.name)
-				image: "public.ecr.aws/gravitational/teleport:" + (input.version)
+				image: teleportImage
                 hostname: "localhost"
 				networks: (input.network): _
 			}
