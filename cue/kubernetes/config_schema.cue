@@ -1,4 +1,4 @@
-package k3d
+package kubernetes
 
 #VolumeWithNodeFilters: {
 	destination: string

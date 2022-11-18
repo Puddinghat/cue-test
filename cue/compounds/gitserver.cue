@@ -9,6 +9,7 @@ import (
 #GitServer: {
 	base.#Compound
 	input="in": {
+        depends_on: [...]
 		name:    string
 		version: string | *"1.1.1"
 		network: string
@@ -17,10 +18,12 @@ import (
             keysHost: string
             repos: string
         }
+        public_keys: [...string]
 	}
 	dep="deps": {
         gitImage: docker.#Image & {
             in: {
+                depends_on: input.depends_on
                 name: "git-ssh:" + (input.version)
             }
         }
@@ -45,6 +48,11 @@ import (
 						"PUID": "1000"
 						"PGID": "1000"
 					}
+                for id, pubkey in input.public_keys {
+                    uploads: "/git/keys-extra/pubkey_\(id).pub": {
+                        content: pubkey
+                    } 
+                }
 			}
 		}
 	}

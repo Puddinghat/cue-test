@@ -4,8 +4,9 @@ import (
 	"github.com/Puddinghat/cuetest/cue/docker"
 	"github.com/Puddinghat/cuetest/cue/terraform"
 	"github.com/Puddinghat/cuetest/cue/compounds"
-	"github.com/Puddinghat/cuetest/cue/k3d"
+	"github.com/Puddinghat/cuetest/cue/kubernetes"
 	"github.com/Puddinghat/cuetest/cue/vault"
+	"github.com/Puddinghat/cuetest/cue/secrets"
 )
 
 test: #Root & {#parameters: rootdir: "test"}
@@ -18,8 +19,10 @@ test: #Root & {#parameters: rootdir: "test"}
 	providers: terraform.#CueOutput & {
 		#resources: {
 			dockerProvider: docker.#Provider
-			k3dProv: k3d.#Provider
+			k3dProv: kubernetes.#k3dProvider
 			vaultProv: vault.#Provider
+			tlsProv: secrets.#Provider
+			helmProv: kubernetes.#HelmProvider
 		}
 	}
 	tf: terraform.#CueOutput & {
@@ -31,19 +34,7 @@ test: #Root & {#parameters: rootdir: "test"}
 				}
 			}
 
-			gitServer: compounds.#GitServer & {
-				in: {
-					name:    "cuetest"
-					network: echo.ref.name
-					mounts: {
-						keys: #parameters.rootdir + "/cue-test/keys"
-						keysHost: #parameters.rootdir + "/cue-test/keys-host"
-						repos: #parameters.rootdir
-					}
-				}
-			}
-
-			cluster: k3d.#Cluster & {
+			cluster: kubernetes.#Cluster & {
 				in: {
 					name:    "test-cluster"
 					config: {
@@ -62,6 +53,23 @@ test: #Root & {#parameters: rootdir: "test"}
 			vaultProv: vault.#ProviderFromConfig & {
 				in: {
 					config: vaultInst.lib.config
+				}
+			}
+			sshKey: secrets.#PrivateKey & {
+				in: {
+					id: "gitkey"
+				}
+			}
+			gitServer: compounds.#GitServer & {
+				in: {
+					name:    "cuetest"
+					network: echo.ref.name
+					mounts: {
+						keys: #parameters.rootdir + "/cue-test/keys"
+						keysHost: #parameters.rootdir + "/cue-test/keys-host"
+						repos: #parameters.rootdir
+					}
+					public_keys: [sshKey.ref.public_key_ssh]
 				}
 			}
 		}

@@ -64,7 +64,7 @@ import (
 }
 
 #Upload: [File=_]: {
-	{content?: string} | {content_base64?: string} | {source?: string}
+	//{content?: string} | {content_base64?: string} | {source?: string}
 	file:            string | *File
 	content?:        string
 	content_base64?: string
