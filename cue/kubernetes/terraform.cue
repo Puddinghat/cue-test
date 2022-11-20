@@ -17,6 +17,38 @@ import (
 	}
 }
 
+#ConfigMap: {
+    terraform.#Resource
+    input="in": {
+        name: string
+        namespace: string
+        preexisting: bool | *false
+        metadata: {
+            labels: {...}
+            annotations: {...}
+        }
+        data: {...}
+        refs: {
+            name: path: "object.metadata.name"
+        }
+        id: string | *name
+        resource: [
+            if preexisting {"kubernetes_config_map_v1_data"}
+            "kubernetes_config_map"
+        ][0]      
+    }
+
+    res: {
+        metadata: {
+            name: input.name
+            namespace: input.namespace
+            if !input.preexisting {input.metadata}
+        }
+        data: input.data
+        if input.preexisting {force: true}
+    }
+}
+
 #Secret: {
     terraform.#Resource
     input="in": {

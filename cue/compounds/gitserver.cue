@@ -5,6 +5,11 @@ import (
 	"github.com/Puddinghat/cuetest/cue/docker"
 )
 
+#HostKey: {
+    PrivateKey: string
+    PublicKey: string
+}
+
 // docker container from https://github.com/6arms1leg/git-ssh-docker
 #GitServer: {
 	base.#Compound
@@ -15,10 +20,10 @@ import (
 		network: string
         mounts: {
             keys: string
-            keysHost: string
             repos: string
         }
         public_keys: [...string]
+        host_key: #HostKey
 	}
 	dep="deps": {
         gitImage: docker.#Image & {
@@ -38,9 +43,6 @@ import (
                         "/git/keys": source: input.mounts.keys
                     }
                     docker.#BindMount & {
-                        "/git/keys-host": source: input.mounts.keysHost
-                    }
-                    docker.#BindMount & {
                         "/git/repos": source: input.mounts.repos
                     }
                 }
@@ -51,8 +53,14 @@ import (
                 for id, pubkey in input.public_keys {
                     uploads: "/git/keys-extra/pubkey_\(id).pub": {
                         content: pubkey
-                    } 
+                    }
                 }
+                uploads: "/git/keys-host/ssh_host_ed25519_key": {
+                    content: input.host_key.PrivateKey
+                } 
+                uploads: "/git/keys-host/ssh_host_ed25519_key.pub": {
+                    content: input.host_key.PublicKey
+                } 
 			}
 		}
 	}

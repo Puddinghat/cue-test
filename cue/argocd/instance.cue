@@ -1,6 +1,7 @@
 package argocd
 
 import (
+	"strings"
 	"encoding/yaml"
 	"github.com/Puddinghat/cuetest/cue/kubernetes"
 )
@@ -192,7 +193,7 @@ import (
         path: string
     }
 
-    out: "\(in.user)@\(in.host):\(in.path)"
+    out: "ssh://\(in.user)@\(in.host)\(in.path)"
 }
 
 #SSHGitRepoCredentials: {
@@ -223,4 +224,27 @@ import (
 			sshPrivateKey: input.privateKey
 		}
 	}
+}
+
+#KnownHosts: {
+	url: string
+	publickey: string
+	out: "\(url) \(publickey)"
+}
+
+#SSHRepoKnownHosts: {
+	kubernetes.#ConfigMap
+	input="in": {
+        name: "argocd-ssh-known-hosts-cm"
+		preexisting: true
+        namespace: string
+        known_hosts: [...#KnownHosts]
+        id: "argocd-ssh-known-hosts-cm-" + (namespace)
+    }
+
+	res: {
+        data: {
+			ssh_known_hosts: strings.Join([for _, hosts in input.known_hosts {hosts.out}],"\n")
+		}
+    }
 }

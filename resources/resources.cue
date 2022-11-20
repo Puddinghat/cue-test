@@ -68,16 +68,26 @@ test: #Root & {
 					id: "gitkey"
 				}
 			}
+			sshHostKey: secrets.#PrivateKey & {
+				in: {
+					id: "hostkey"
+				}
+			}
 			gitServer: compounds.#GitServer & {
 				in: {
 					name:    "cuetest"
 					network: echo.ref.name
 					mounts: {
 						keys:     #parameters.rootdir + "/cue-test/keys"
-						keysHost: #parameters.rootdir + "/cue-test/keys-host"
 						repos:    #parameters.rootdir
 					}
 					public_keys: [sshKey.ref.public_key_ssh]
+					host_key: {
+						compounds.#HostKey & {
+							PrivateKey: sshHostKey.ref.secret_key_ssh
+    						PublicKey: sshHostKey.ref.public_key_ssh
+						}
+					}
 				}
 			}
 			helmProv: kubernetes.#HelmProvider & {
@@ -105,11 +115,11 @@ test: #Root & {
 			}
 
 			let gitUrl =  argocd.#GitUrl & {
-						in: {
-							host: gitServer.ref.containerName
-							path: "cue-test"
-						}
-					}
+				in: {
+					host: gitServer.ref.containerName
+					path: "/git/repos/cue-test"
+				}
+			}
 
 			argoRepoCreds: argocd.#SSHGitRepoCredentials & {
 				in: {
@@ -120,17 +130,30 @@ test: #Root & {
 				}
 			}
 
+			argoKnownHosts: argocd.#SSHRepoKnownHosts & {
+				in: {
+        			namespace: "argocd"
+        			known_hosts: [
+						argocd.#KnownHosts & {
+							url: gitServer.ref.containerName
+							publickey: sshHostKey.ref.public_key_ssh
+					}]
+				}
+			}
+
 			testApp: argocd.#GitApplication & {
 				in: {
 					name:      "test"
-					namespace: "test"
+					namespace: "argocd"
 					project:  argoProject
 					repoURL:        gitUrl	
 					branch: #parameters.branch
 					path: 			"argocd"
+					destination: {
+						namespace: "test"
+					}
 				}
 			}
-
 		}
 	}
 }
