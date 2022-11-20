@@ -13,12 +13,14 @@ import (
 test: #Root & {
 	#parameters: {
 		rootdir: "test"
+		branch: "test"
 	}
 }
 
 #Root: {
 	#parameters: {
 		rootdir: string
+		branch: string
 	}
 
 	providers: terraform.#CueOutput & {
@@ -102,21 +104,33 @@ test: #Root & {
 				}
 			}
 
-			argoRepoCreds: argocd.#SSHGitRepoCredentials & {
-				in: {
-					name:      "local-git-creds"
-					namespace: "argocd"
-					url:       argocd.#GitUrl & {
+			let gitUrl =  argocd.#GitUrl & {
 						in: {
 							host: gitServer.ref.containerName
 							path: "cue-test"
 						}
 					}
+
+			argoRepoCreds: argocd.#SSHGitRepoCredentials & {
+				in: {
+					name:      "local-git-creds"
+					namespace: "argocd"
+					url:       gitUrl
 					privateKey: sshKey.ref.secret_key_ssh
 				}
 			}
 
-			
+			testApp: argocd.#GitApplication & {
+				in: {
+					name:      "test"
+					namespace: "test"
+					project:  argoProject
+					repoURL:        gitUrl	
+					branch: #parameters.branch
+					path: 			"argocd"
+				}
+			}
+
 		}
 	}
 }

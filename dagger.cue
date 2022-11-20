@@ -41,9 +41,16 @@ dagger.#Plan & {
 			"PWD": string
 		}
 		network: "unix:///var/run/docker.sock": connect: dagger.#Socket
+		commands: branch: {
+			name: "git"
+			args: ["branch","--show-current"]
+		}
 	}
 	actions: {
-		let resourceConfig = resources.#Root & {#parameters: {rootdir: path.Clean(client.env["PWD"]+"/..", "unix")}}
+		let resourceConfig = resources.#Root & {#parameters: {
+			rootdir: path.Clean(client.env["PWD"]+"/..", "unix")
+			branch: client.commands.branch.stdout
+			}}
 
 		terraformPrepare: {
 

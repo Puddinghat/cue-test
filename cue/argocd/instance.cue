@@ -33,7 +33,7 @@ import (
 #SyncOptions: {
 	input="in": {
 		Validate:               bool | *false
-		CreateNamespace:        bool | *false
+		CreateNamespace:        bool | *true
 		PrunePropagationPolicy: *"foreground" | "background" | "orphan"
 		PruneLast:              bool | *true
 	}
@@ -42,10 +42,11 @@ import (
 
 #Retry: {
 	limit: int | *5
-	backoff:
+	backoff: {
 		duration: *"5s" | string
-	factor:      *2 | int
-	maxDuration: *"3m" | string
+		factor:      *2 | int
+		maxDuration: *"3m" | string
+	}
 }
 
 #SyncPolicy: {
@@ -101,17 +102,20 @@ import (
 			annotations: {...}
 			finalizers: ["resources-finalizer.argocd.argoproj.io"]
 		}
-		spec: {
-			project: input.project.ref.name
-			source: {
-				repoURL:        string
-				targetRevision: string
+		repoURL:        #GitUrl
+		branch: string
+		path: 			string
+	}
+
+	res: {
+		manifest: {
+				spec: {
+					source: {
+						repoURL:        input.repoURL.out
+						targetRevision: input.branch
+						path: 			input.path
+					}
 			}
-			destination: {
-				server:    string | *"https://kubernetes.default.svc"
-				namespace: string | *input.namespace
-			}
-			syncPolicy: #SyncPolicy
 		}
 	}
 }
@@ -127,19 +131,27 @@ import (
 			annotations: {...}
 			finalizers: ["resources-finalizer.argocd.argoproj.io"]
 		}
-		spec: {
-			project: input.project.ref.name
-			source: {
-				...
-			}
-			destination: {
-				server:    string | *"https://kubernetes.default.svc"
-				namespace: string | *input.namespace
-			}
-			syncPolicy: #SyncPolicy
+		source: {
+			...
 		}
+		destination: {
+			server:    string | *"https://kubernetes.default.svc"
+			namespace: string | *input.namespace
+		}
+		syncPolicy: #SyncPolicy
 		kind:       "Application"
 		apiVersion: "argoproj.io/v1alpha1"
+	}
+
+	res: {
+		manifest: {
+				spec: {
+					project: input.project.ref.name
+					source: input.source
+					destination: input.destination
+					syncPolicy: #SyncPolicy
+			}
+		}
 	}
 }
 
