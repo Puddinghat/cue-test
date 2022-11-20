@@ -147,10 +147,10 @@ test: #Root & {
 					namespace: "argocd"
 					project:  argoProject
 					repoURL:        gitUrl	
-					branch: #parameters.branch
+					branch: "HEAD"
 					path: 			"argocd"
 					destination: {
-						namespace: "test"
+						namespace: "default"
 					}
 				}
 			}
