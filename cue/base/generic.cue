@@ -1,7 +1,14 @@
 package base
 
-#Compound: {
+#Base: {
 	in: {...}
+	lib: {...}
+	ref: {...}
+	out: {...}
+}
+
+#Compound: {
+	#Base
 	deps: {...}
 	for _, resources in deps {
 		out: resources.out

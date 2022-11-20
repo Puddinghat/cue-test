@@ -19,14 +19,13 @@ import (
         id: string
         resource: "tls_private_key"
         algorithm: "RSA" | "ECDSA" | "ED25519" | *"ED25519"
+        refs: {
+            secret_key_ssh: path: "private_key_openssh"
+            public_key_ssh: path: "public_key_openssh"
+        }
     }
 
     res: {
         algorithm: input.algorithm
-    }
-
-    ref: {
-        secret_key_ssh: "${tls_private_key.\(input.id).private_key_openssh}"
-        public_key_ssh: "${tls_private_key.\(input.id).public_key_openssh}"
     }
 }

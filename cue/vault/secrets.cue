@@ -12,14 +12,13 @@ import (
         path: string
         id: strings.Replace(path, "/", "_", -1)
         type: string
+        refs: {
+            path: path: "path"
+        }
     }
 
     res: {
         path: input.path
         type: input.type
-    }
-
-    ref: {
-        path: "\(input.resource).\(input.id).path"
     }
 }

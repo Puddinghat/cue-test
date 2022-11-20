@@ -1,28 +1,42 @@
 package terraform
 
+import "github.com/Puddinghat/cuetest/cue/base"
+
 #TFDefinition: {
 	depends_on?: [...string]
 }
 
 #Schema: {
-	in: {...}
+	base.#Base
+	inst: string
 	out: {
 		tf: {
 			...
 		}
-	...
 	}
-	...
 }
 
-#Resource: #Schema & {
+#Ref: {
+	[Name=_]: {
+		path: string
+	}
+}
+
+#Resource: {
+	#Schema
 	input="in": {
 		tf:       #TFDefinition
 		resource: string
 		id:       string
+		refs: #Ref
 	}
 
-	ref: {...}
+	ref: {
+		for name, reference in input.refs {
+			(name): "${\(input.resource).\(input.id).\(reference.path)}"
+		}
+	}
+
     res: {...}
 	inst: "\(input.resource).\(input.id)"
 
@@ -35,11 +49,19 @@ package terraform
 	}
 }
 
-#Data: #Schema & {
+#Data: {
+	#Schema
 	input="in": {
 		tf:   #TFDefinition
 		data: string
 		id:   string
+		refs: #Ref
+	}
+
+	ref: {
+		for name, reference in input.refs {
+			(name): "${data.\(input.resource).\(input.id).\(reference.path)}"
+		}
 	}
 
     res: {...}
@@ -54,13 +76,16 @@ package terraform
 	}
 }
 
-#Provider: #Schema & {
+#Provider: {
+	#Schema
 	input="in": {
 		name:    string
 		source:  string
 		version: string
 		options: {...} | *{}
 	}
+
+	inst: input.name
 
 	out: {
 		tf: {
@@ -77,12 +102,15 @@ package terraform
 }
 
 #Output: {
+	#Schema
 	input="in": {
 		tf:   #TFDefinition
 		value: string
 		id:   string
 		sensitive: bool | *false
 	}
+
+	inst: "output.\(input.id)"
 
 	out: {
 		tf: output: (input.id): {
@@ -96,7 +124,10 @@ package terraform
 
 #CueOutput: {
 	#resources: {
-		[_]: #Schema
+		[_]: {
+			base.#Base
+			...
+			}
 	}
 
 	for _, res in #resources {

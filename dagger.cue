@@ -43,7 +43,7 @@ dagger.#Plan & {
 		network: "unix:///var/run/docker.sock": connect: dagger.#Socket
 	}
 	actions: {
-		let resourceConfig = resources.#Root & {#parameters: {rootdir: path.Clean(client.env["PWD"] + "/..", "unix")}}
+		let resourceConfig = resources.#Root & {#parameters: {rootdir: path.Clean(client.env["PWD"]+"/..", "unix")}}
 
 		terraformPrepare: {
 

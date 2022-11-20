@@ -19,6 +19,9 @@ import (
         generate_signing_key: bool | *true
         public_key?: string
         private_key?: string
+        refs: {
+            backend: path: "backend"
+        }
     }
     res: {
         backend: input.backend
@@ -29,9 +32,6 @@ import (
         if input.private_key != "_|_" {
             private_key: input.private_key
         }
-    }
-    ref: {
-        backend: "\(input.resource).\(input.id).backend"
     }
 }
 

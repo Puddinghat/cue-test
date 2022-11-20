@@ -1,7 +1,6 @@
 package kubernetes
 
 import (
-	"encoding/yaml"
 	"github.com/Puddinghat/cuetest/cue/terraform"
 )
 
@@ -12,45 +11,6 @@ import (
 		version: "0.0.6"
 	}
 }
-
-#HelmProvider: terraform.#Provider & {
-	in: {
-		name:    "helm"
-		source:  "hashicorp/helm"
-		version: "2.7.1"
-		#kubeConfig?: #KubeConfigConfigPaths | #KubeConfigClientCert
-		if #kubeConfig != _|_ {
-			options: kubernetes: #kubeConfig
-		}
-	}
-}
-
-#HelmTerraform: {
-	terraform.#Resource
-	input="in": {
-		name: string
-		chart: string
-		repository: string
-		version: string
-		namespace: string
-		wait: bool | *false
-		values: {}
-		create_namespace: bool | *true
-		resource: "helm_release"
-		id:       name
-	}
-
-	res: {
-		name: input.name
-		chart: input.chart
-		repository: input.repository
-		version: input.version
-		namespace: input.namespace
-		wait: input.wait
-		values: [yaml.Marshal(input.values)]
-		create_namespace: input.create_namespace
-	}
-} 
 
 #KubeConfigClientCert: {
 	host: string
@@ -63,7 +23,7 @@ import (
 	config_paths: [...string]
 }
 
-#Cluster: {
+#K3dCluster: {
 	terraform.#Resource
 	input="in": {
 		config: #SimpleConfig & {
@@ -72,6 +32,14 @@ import (
 		name:     string
 		resource: "k3d_cluster"
 		id:       name
+		refs: {
+			client_certificate: path: "credentials[0].client_certificate"
+			client_key: path: "credentials[0].client_key"
+			cluster_ca_certificate: path: "credentials[0].cluster_ca_certificate"
+			host: path: "credentials[0].host"
+			raw: path: "credentials[0].raw"
+			id: path: "id"
+		}
 	}
 
 	inst: "\(input.resource).\(input.id)"
@@ -79,22 +47,19 @@ import (
 		input.config
 	}
 
-	ref: {
-		id: "${\(inst).id}"
-		credentials: {
-			client_certificate:     "${\(inst).credentials[0].client_certificate}"
-			client_key:             "${\(inst).credentials[0].client_key}"
-			cluster_ca_certificate: "${\(inst).credentials[0].cluster_ca_certificate}"
-			host:                   "${\(inst).credentials[0].host}"
-			raw:                    "${\(inst).credentials[0].raw}"
-		}
-	}
+	ref: {...}
 
 	lib: {
+		refCredentials: #KubeConfigClientCert & {
+			host: ref.host
+			client_certificate: ref.client_certificate
+			client_key: ref.client_key
+			cluster_ca_certificate: ref.cluster_ca_certificate
+		}
 		kubeConfig: terraform.#Output & {
 			"in": {
 				id:    "kubeconfig_\(input.name)"
-				value: ref.credentials.raw
+				value: ref.raw
 				sensitive: true
 			}
 		}

@@ -58,6 +58,6 @@ import (
 	}
 
     ref: {
-        container: dep.container.ref
+        containerName: dep.container.ref.name
     }
 }

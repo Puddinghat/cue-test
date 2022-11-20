@@ -7,9 +7,14 @@ import (
 	"github.com/Puddinghat/cuetest/cue/kubernetes"
 	"github.com/Puddinghat/cuetest/cue/vault"
 	"github.com/Puddinghat/cuetest/cue/secrets"
+	"github.com/Puddinghat/cuetest/cue/argocd"
 )
 
-test: #Root & {#parameters: rootdir: "test"}
+test: #Root & {
+	#parameters: {
+		rootdir: "test"
+	}
+}
 
 #Root: {
 	#parameters: {
@@ -19,10 +24,11 @@ test: #Root & {#parameters: rootdir: "test"}
 	providers: terraform.#CueOutput & {
 		#resources: {
 			dockerProvider: docker.#Provider
-			k3dProv: kubernetes.#k3dProvider
-			vaultProv: vault.#Provider
-			tlsProv: secrets.#Provider
-			helmProv: kubernetes.#HelmProvider
+			k3dProv:        kubernetes.#k3dProvider
+			vaultProv:      vault.#Provider
+			tlsProv:        secrets.#Provider
+			helmProv:       kubernetes.#HelmProvider
+			kubeProv:       kubernetes.#KubernetesProvider
 		}
 	}
 	tf: terraform.#CueOutput & {
@@ -34,9 +40,9 @@ test: #Root & {#parameters: rootdir: "test"}
 				}
 			}
 
-			cluster: kubernetes.#Cluster & {
+			cluster: kubernetes.#K3dCluster & {
 				in: {
-					name:    "test-cluster"
+					name: "test-cluster"
 					config: {
 						network: echo.ref.name
 					}
@@ -44,9 +50,9 @@ test: #Root & {#parameters: rootdir: "test"}
 			}
 
 			clusterCredentials: cluster.lib.kubeConfig
-			vaultInst: vault.#Instance & {
+			vaultInst:          vault.#Instance & {
 				in: {
-					name: "dev-vault"
+					name:    "dev-vault"
 					network: echo.ref.name
 				}
 			}
@@ -65,13 +71,52 @@ test: #Root & {#parameters: rootdir: "test"}
 					name:    "cuetest"
 					network: echo.ref.name
 					mounts: {
-						keys: #parameters.rootdir + "/cue-test/keys"
+						keys:     #parameters.rootdir + "/cue-test/keys"
 						keysHost: #parameters.rootdir + "/cue-test/keys-host"
-						repos: #parameters.rootdir
+						repos:    #parameters.rootdir
 					}
 					public_keys: [sshKey.ref.public_key_ssh]
 				}
 			}
+			helmProv: kubernetes.#HelmProvider & {
+				in: {
+					kubeconfig: cluster.lib.refCredentials
+				}
+			}
+			argoInstance: argocd.#Instance & {
+				in: {
+					name: "argo"
+				}
+			}
+
+			kubeProv: kubernetes.#KubernetesProvider & {
+				in: {
+					kubeconfig: cluster.lib.refCredentials
+				}
+			}
+
+			argoProject: argocd.#Project & {
+				in: {
+					name:      "dev"
+					namespace: "argocd"
+				}
+			}
+
+			argoRepoCreds: argocd.#SSHGitRepoCredentials & {
+				in: {
+					name:      "local-git-creds"
+					namespace: "argocd"
+					url:       argocd.#GitUrl & {
+						in: {
+							host: gitServer.ref.containerName
+							path: "cue-test"
+						}
+					}
+					privateKey: sshKey.ref.secret_key_ssh
+				}
+			}
+
+			
 		}
 	}
 }
